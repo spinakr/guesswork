@@ -24,7 +24,7 @@ namespace Web
                         .ConnectionLimit(-1);
                 });
 
-                _.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
+                _.AutoCreateSchemaObjects = AutoCreate.All;
                 _.Events.DatabaseSchemaName = "events";
 
 

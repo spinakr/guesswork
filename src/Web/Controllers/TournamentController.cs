@@ -9,6 +9,7 @@ using Marten.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
+using Web.Queries;
 
 namespace Web.Controllers
 {
@@ -28,24 +29,17 @@ namespace Web.Controllers
         }
 
         [HttpGet("")]
-        public IEnumerable<Tournament> GetTournaments()
+        public async Task<IEnumerable<Tournament>> GetTournaments()
         {
-            var tournaments = _documentSession.Query<Tournament>().ToList();
-            return tournaments;
+            return await new TournamentQueries(_documentSession).GetTournaments();
         }
         
         [HttpGet("{tournamentId}")]
-        public Tournament GetTournament(string tournamentId)
+        public async Task<ActionResult<Tournament>> GetTournament(Guid tournamentId)
         {
-            return new Tournament();
+            return await new TournamentQueries(_documentSession).GetTournament(tournamentId);
         }
         
-        [HttpGet("{tournamentId}/groups")]
-        public IEnumerable<Group> GetGroups(string tournamentId)
-        {
-            return new List<Group>();
-        }
-
         [HttpPost]
         public async Task<ActionResult<Guid>> CreateNewTournament(CreateTournamentRequest req)
         {
@@ -61,8 +55,6 @@ namespace Web.Controllers
 
             return CreatedAtAction(nameof(GetTournament), new {id = tournamentId});
         }
-        
-        
     }
 
     public class CreateTournamentRequest

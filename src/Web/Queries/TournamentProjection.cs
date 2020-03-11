@@ -19,12 +19,12 @@ namespace Web.Queries
             model.Name = tournamentCreated.Name;
             model.Starts = tournamentCreated.Starts;
             model.Ends = tournamentCreated.Ends;
-            model.Groups = new List<(Guid id, string name)>();
+            model.Groups = new List<Tuple<Guid, string>>();
         }
         
         private static void UpdateTournament(Tournament model, NewGroupWasCreated groupCreated)
         {
-            model.Groups.Add((groupCreated.GroupId, groupCreated.GroupName));
+            model.Groups.Add(new Tuple<Guid, string>(groupCreated.GroupId, groupCreated.GroupName));
         }
     }
 }

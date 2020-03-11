@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Domain.GroupAggregate.DomainEvents;
 using Domain.Util;
@@ -10,10 +11,10 @@ namespace Domain.GroupAggregate
         public List<RegisteredTeam> Teams { get; private set; }
         public List<ScheduledMatch> Fixtures { get; private set; }
 
-        public static Group CreateNewGroup(string name, string tournamentName)
+        public static Group CreateNewGroup(string name, Guid tournamentId)
         {
             var group = new Group();
-            group.AddDomainEvent(new NewGroupWasCreated {GroupName = name, TournamentName = tournamentName});
+            group.AddDomainEvent(new NewGroupWasCreated {GroupId = Guid.NewGuid(), GroupName = name, TournamentId = tournamentId});
             return group;
         }
 
@@ -24,6 +25,7 @@ namespace Domain.GroupAggregate
 
         public void Apply(NewGroupWasCreated groupCreated)
         {
+            Id = groupCreated.GroupId;
             Name = groupCreated.GroupName;
             Teams = new List<RegisteredTeam>();
         }

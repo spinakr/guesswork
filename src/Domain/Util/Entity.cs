@@ -6,9 +6,9 @@ namespace Domain.Util
     public abstract class Entity
     {
         int? _requestedHashCode;
-        int _Id;
+        Guid _Id;
         private List<IDomainEvent> _domainEvents;
-        public virtual int Id
+        public virtual Guid Id
         {
             get
             {
@@ -35,7 +35,7 @@ namespace Domain.Util
 
         public bool IsTransient()
         {
-            return this.Id == default(Int32);
+            return this.Id == default(Guid);
         }
 
         public override bool Equals(object obj)

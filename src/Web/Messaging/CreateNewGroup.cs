@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Domain.GroupAggregate;
 using Marten;
 using NServiceBus;
+using Web.Queries;
 
 namespace Web.Messaging
 {
@@ -23,17 +25,25 @@ namespace Web.Messaging
             _documentSession = documentSession;
         }
 
-        public Task Handle(CreateNewGroup message, IMessageHandlerContext context)
+        public async Task Handle(CreateNewGroup message, IMessageHandlerContext context)
         {
+            var tournament = await new TournamentQueries(_documentSession).GetTournament(message.TournamentId);
+
+            if (tournament.Groups.Any(x => x.Item2 == message.GroupName)) 
+                throw new Exception($"Group with name {message.GroupName} already exist in tournament {message.TournamentId}");
+            
             var group = Group.CreateNewGroup(message.GroupName, message.TournamentId);
             foreach (var teamName in message.TeamNames)
             {
                 group.AddNewTeam(teamName);
             }
 
-            _documentSession.Events.Append(group.Id, group.DomainEvents);
+            foreach (var domainEvent in group.DomainEvents)
+            {
+                _documentSession.Events.Append(group.Id, domainEvent);
+            }
 
-            return Task.CompletedTask;
+            await _documentSession.SaveChangesAsync();
         }
     }
 }

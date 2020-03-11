@@ -23,9 +23,12 @@ namespace Web
                 .UseNServiceBus(context =>
                 {
                     var endpointConfiguration = new EndpointConfiguration("guesswork.web");
+                    endpointConfiguration.AuditProcessedMessagesTo("audit");
+                    
                     var transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
                     transport.ConnectionString(context.Configuration.GetValue<string>("ASB_CON_STRING"));
                     transport.SubscriptionNameShortener(x => x.Split('.').Last());
+                    
                     endpointConfiguration.EnableInstallers();
                     
                     // transport.Routing().RouteToEndpoint(
