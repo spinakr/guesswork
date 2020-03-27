@@ -17,6 +17,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  rabbitmq:
+    container_name: rabbitmq
+    image: "rabbitmq:3-management"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - guesswork_network
+    healthcheck:
+      test: ["CMD-SHELL", "if rabbitmqctl status; then \nexit 0 \nfi \nexit 1"]
+      interval: 10s
+      retries: 5
   web:
     build:
       dockerfile: src/Web/Dockerfile
@@ -25,24 +37,12 @@ services:
     ports:
       - "80:80"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
       - guesswork_network
-#  messaging:
-#    build:
-#      dockerfile: src/MessageEndpoint/Dockerfile
-#      context: .
-#    container_name: messaging
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      rabbitmq:
-#        condition: service_healthy
-#      migration:
-#        condition: service_started
-#    networks:
-#      - wine_network
 networks:
   guesswork_network:
     driver: bridge

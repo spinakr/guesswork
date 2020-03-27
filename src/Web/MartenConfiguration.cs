@@ -3,16 +3,18 @@ using Domain.GroupAggregate.DomainEvents;
 using Marten;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Web.Queries;
 
 namespace Web
 {
     public static class MartenConfiguration
     {
-        public static void ConfigureMarten(this IServiceCollection services, IConfiguration configuration)
+        public static void ConfigureMarten(this IServiceCollection services, IConfiguration configuration, IHostEnvironment hostEnvironment)
         {
             var store = DocumentStore.For(_ =>
             {
+                _.DatabaseSchemaName = $"guesswork_{hostEnvironment.EnvironmentName}";
                 _.Connection(configuration.GetValue<string>("POSTGRES_CON_STRING"));
 
                 _.CreateDatabasesForTenants(c =>
@@ -25,7 +27,6 @@ namespace Web
                 });
 
                 _.AutoCreateSchemaObjects = AutoCreate.All;
-                _.Events.DatabaseSchemaName = "events";
 
 
                 _.Events.AddEventType(typeof(NewGroupWasCreated));

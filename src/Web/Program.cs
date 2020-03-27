@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 namespace Web
 {
@@ -14,30 +16,30 @@ namespace Web
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console(new RenderedCompactJsonFormatter())
+                // .WriteTo.File(new RenderedCompactJsonFormatter(), $"./logs")
+                .CreateLogger();
+            try
+            {
+                Log.Information("Starting up");
+                CreateHostBuilder(args).Build().Run();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Application start-up failed");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
-                .UseNServiceBus(context =>
-                {
-                    var endpointConfiguration = new EndpointConfiguration("guesswork.web");
-                    endpointConfiguration.AuditProcessedMessagesTo("audit");
-                    
-                    var transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
-                    transport.ConnectionString(context.Configuration.GetValue<string>("ASB_CON_STRING"));
-                    transport.SubscriptionNameShortener(x => x.Split('.').Last());
-                    
-                    endpointConfiguration.EnableInstallers();
-                    
-                    // transport.Routing().RouteToEndpoint(
-                    //     assembly: typeof(MyMessage).Assembly,
-                    //     destination: "Samples.ASPNETCore.Endpoint");
-
-
-                    return endpointConfiguration;
-                });
+                .UseSerilog()
+                .UseNServiceBus(NServiceBusConfiguration.ConfigureEndpoint);
     }
-
 }

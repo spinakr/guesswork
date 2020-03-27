@@ -6,13 +6,17 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Web.Queries;
 
 namespace Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IHostEnvironment _env;
+
+        public Startup(IConfiguration configuration, IHostEnvironment env)
         {
+            _env = env;
             Configuration = configuration;
         }
 
@@ -23,7 +27,10 @@ namespace Web
         {
             services.AddControllersWithViews();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-            services.ConfigureMarten(Configuration);
+            services.ConfigureMarten(Configuration, _env);
+            
+            services.AddTransient<TournamentQueries>();
+            services.AddTransient<GroupQueries>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
